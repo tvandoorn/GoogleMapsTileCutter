@@ -1,3 +1,5 @@
+package me.tvandoorn.gmapstilecutter;
+
 import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.image.BufferedImage;
@@ -7,7 +9,6 @@ import java.io.IOException;
 public class TileCutter {
     
     private int zoom;
-    private String fullmapurl;
     private String outputdir;
     
     private int tilesize;
@@ -15,22 +16,12 @@ public class TileCutter {
     private BufferedImage fullmap;
     private ProgressBar progress;
     
-    public TileCutter(int zoom, String fullmap, String outputdir) {
+    public TileCutter(int zoom, BufferedImage fullmap, String outputdir) {
         this.zoom = zoom;
-        this.fullmapurl = fullmap;
+        this.fullmap = fullmap;
         this.outputdir = outputdir;
         
         this.tilesize = 256;
-    }
-
-    public int getZoom() {
-        return this.zoom;
-    }
-    public String getFullmapurl() {
-        return this.fullmapurl;
-    }
-    public String getOutputdir() {
-        return this.outputdir;
     }
 
     public void init() {
@@ -41,10 +32,6 @@ public class TileCutter {
             this.totaltiles += (int)(Math.pow(2, i) * Math.pow(2, i));
         
         System.out.println("Tile count to be generated: " + this.totaltiles);
-
-        System.out.print("Loading full map into memory...");
-        this.fullmap = Utility.loadImage(this.fullmapurl);
-        System.out.println(" Done!");
 
         System.out.println("Initialization finished.");
     }

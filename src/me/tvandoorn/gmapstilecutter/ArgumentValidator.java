@@ -1,3 +1,7 @@
+package me.tvandoorn.gmapstilecutter;
+
+import java.awt.image.BufferedImage;
+
 public class ArgumentValidator {
     
     public static void validate(String[] args) {
@@ -26,4 +30,11 @@ public class ArgumentValidator {
         }
     }
     
+    public static void fullmapIsCorrectResolution(BufferedImage image, int zoom) {
+        int size = (int)(Math.pow(2, zoom - 1) * 256);
+        
+        if(image.getWidth() != size && image.getHeight() != size) {
+            Utility.exitWithError("Incorrect image dimensions. Image should be " + size + "x" + size + " pixels.");
+        }
+    }
 }

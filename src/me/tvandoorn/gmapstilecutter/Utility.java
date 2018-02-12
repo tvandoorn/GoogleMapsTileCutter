@@ -1,3 +1,5 @@
+package me.tvandoorn.gmapstilecutter;
+
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.File;

@@ -1,3 +1,5 @@
+package me.tvandoorn.gmapstilecutter;
+
 import java.util.Collections;
 
 public class ProgressBar {
@@ -14,24 +16,12 @@ public class ProgressBar {
         this.draw();
     }
     
-    public int getCompletedTasks() {
-        return this.completedTasks;
-    }
-    public int getTotalTasks() {
-        return this.totalTasks;
-    }
-    
     public void advance() {
         this.advance(1);
     }
     public void advance(int increment) {
         if((this.completedTasks + increment) <= this.totalTasks)
             this.completedTasks += increment;
-        this.draw();
-    }
-    
-    public void reset() {
-        this.completedTasks = 0;
         this.draw();
     }
     
