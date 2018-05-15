@@ -1,37 +1,30 @@
 package me.tvandoorn.gmapstilecutter;
 
-import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.image.BufferedImage;
-import java.io.FileOutputStream;
-import java.io.IOException;
+import java.util.concurrent.*;
 
 public class TileCutter {
     
     private int zoom;
-    private String outputdir;
+    private String outputDir;
     
-    private int tilesize;
-    private int totaltiles;
-    private BufferedImage fullmap;
-    private ProgressBar progress;
+    private BufferedImage fullMap;
     
-    public TileCutter(int zoom, BufferedImage fullmap, String outputdir) {
+    private int threadCount;
+    
+    public TileCutter(int zoom, int threadcount, BufferedImage fullmap, String outputdir) {
         this.zoom = zoom;
-        this.fullmap = fullmap;
-        this.outputdir = outputdir;
-        
-        this.tilesize = 256;
+        this.fullMap = fullmap;
+        this.outputDir = outputdir;
+        this.threadCount = threadcount;
     }
 
     public void init() {
         System.out.println();
         System.out.println("Initializing tile cutter...");
         
-        for(int i = 0; i <= this.zoom; i++)
-            this.totaltiles += (int)(Math.pow(2, i) * Math.pow(2, i));
-        
-        System.out.println("Tile count to be generated: " + this.totaltiles);
+        System.out.println("Tile count to be generated: " + Utility.getTotalTileCount(zoom));
 
         System.out.println("Initialization finished.");
     }
@@ -41,57 +34,54 @@ public class TileCutter {
         System.out.println("Starting cutter...");
         System.out.println();
         
-        this.progress = new ProgressBar("tiles", this.totaltiles);
-        
-        this.recursiveSplit(this.fullmap, this.zoom);
+        this.dispatchThreads();
     }
     
-    private void recursiveSplit(BufferedImage image, int zoom) {
-        int mapwidth = this.getMapSize(zoom);
+    private void dispatchThreads() {
+        int lastZoom = 0;
         
-        int sizetiles = mapwidth / this.tilesize;
+        ExecutorService threadPool = Executors.newFixedThreadPool(this.threadCount);
+        BlockingQueue<TileCutterThread> threads = new ArrayBlockingQueue<>(this.zoom);
+        
+        System.out.println("Creating threads...");
+        while(lastZoom < this.zoom) {
+            System.out.println("Creating thread for zoom level " + (lastZoom + 1) + "/" + this.zoom);
 
-        BufferedImage resizedimage = this.resizeImage(image, mapwidth);
-        image.flush();
+            BufferedImage source = this.resizeImage(this.fullMap, Utility.getMapSize(lastZoom));
+            
+            TileCutterThread tcThread = new TileCutterThread(source, lastZoom, new TileWriter(this.outputDir));
+            threads.add(tcThread);
+            
+            lastZoom++;
+        }
         
-        for(int x = 0; x < sizetiles; x++)
-            for(int y = 0; y < sizetiles; y++)
-                this.processTile(resizedimage, x, y, zoom);
+        System.out.println("\nStarting threads...");
         
-        if(zoom > 0)
-            this.recursiveSplit(resizedimage, zoom - 1);
+        while(!threads.isEmpty()) {
+            try {
+                threadPool.execute(threads.take());
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+        
+        threadPool.shutdown();
+        try {
+            threadPool.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
+        } catch (InterruptedException e) {}
     }
-    
-    private int getMapSize(int zoom) {
-        return this.tilesize * (int)Math.pow(2, zoom);
-    }
+
     private BufferedImage resizeImage(BufferedImage image, int size) {
+        if(image.getWidth() == size)
+            return image;
+        
         Image temp = image.getScaledInstance(size, size, Image.SCALE_SMOOTH);
         BufferedImage dimg = new BufferedImage(size, size, BufferedImage.TYPE_INT_ARGB);
 
-        Graphics2D g2d = dimg.createGraphics();
-        g2d.drawImage(temp, 0, 0, null);
-        g2d.dispose();
+        Graphics g = dimg.createGraphics();
+        g.drawImage(temp, 0, 0, null);
+        g.dispose();
 
         return dimg;
-    }
-
-    private void processTile(BufferedImage image, int x, int y, int zoom) {
-        String fullpath = String.format(this.outputdir + "/%d/%d/%d.png", zoom, x, y);
-        
-        if(!Utility.directoryExists(this.outputdir + '/' + zoom))
-            Utility.createDirectory(this.outputdir + '/' + zoom);
-
-        if(!Utility.directoryExists(this.outputdir + '/' + zoom + '/' + x))
-            Utility.createDirectory(this.outputdir + '/' + zoom + '/' + x);
-        
-        BufferedImage dest = image.getSubimage(x * this.tilesize, y * this.tilesize, this.tilesize, this.tilesize);
-
-        try {
-            ImageIO.write(dest, "PNG", new FileOutputStream(fullpath));
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        this.progress.advance();
     }
 }

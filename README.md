@@ -1,9 +1,9 @@
 # GoogleMapsTileCutter
 
 ## Usage
-``GoogleMapsTileCutter.jar {zoom} {full map} {output directory}``
+``GoogleMapsTileCutter.jar {zoom} {threads} {full map} {output directory}``
 
-Zoom should be an integer above zero. Full map should be a relative or absolute path to the full map (.png only!). The output directory does not have to exist at runtime. It will be created as long as the parent directory exists.
+Zoom and threads should be an integer above zero. Full map should be a relative or absolute path to the full map (.png only!). The output directory does not have to exist at runtime. It will be created as long as the parent directory exists.
 
 ## Dimensions vs zoom levels vs tile count
 | Zoom level | Dimensions | Tiles |

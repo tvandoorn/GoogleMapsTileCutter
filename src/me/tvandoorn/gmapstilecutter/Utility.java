@@ -55,4 +55,21 @@ public class Utility {
         }
         return img;
     }
+    
+    public static int getTotalTileCount(int layers) {
+        int tiles = 0;
+        
+        for(int i = 0; i <= layers; i++)
+            tiles += (int)(Math.pow(2, i) * Math.pow(2, i));
+        
+        return tiles;
+    }
+    
+    public static int getLayerTileCount(int layer) {
+        return (int)(Math.pow(2, layer) * Math.pow(2, layer));
+    }
+    
+    public static int getMapSize(int zoom) {
+        return Config.TILE_SIZE * (int)Math.pow(2, zoom);
+    }
 }
